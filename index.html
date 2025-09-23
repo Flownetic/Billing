@@ -4,23 +4,138 @@
 <meta charset="UTF-8">
 <title>Simple Billing System</title>
 <style>
-  body { font-family: Arial; margin:20px; background:#f4f4f9;}
-  h1 { text-align:center; color:#333;}
-  .container { display:flex; gap:30px; flex-wrap:wrap;}
-  .items, .bill { flex:1; min-width:300px; background:white; padding:15px; border-radius:10px; box-shadow:0px 2px 6px rgba(0,0,0,0.2);}
-  .items h2, .bill h2 { margin-bottom:10px; border-bottom:2px solid #ddd; padding-bottom:5px;}
-  .item { display:flex; justify-content:space-between; align-items:center; padding:5px 0;}
-  .bill table { width:100%; border-collapse:collapse; margin-top:10px;}
-  .bill table th, .bill table td { border:1px solid #ccc; padding:8px; text-align:center;}
-  .bill input[type="number"] { width:60px;}
-  .qty-buttons { display:flex; gap:5px; justify-content:center; align-items:center;}
-  .qty-buttons button { padding:2px 8px; cursor:pointer;}
-  .total { text-align:right; margin-top:15px; font-size:18px; font-weight:bold;}
-  .download-btn { margin-top:10px; padding:10px 15px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer;}
-  .download-btn:hover { background:#555;}
-  .status-container, .operator-container, .customer-container { margin-top:10px; }
-  .bill-header, .bill-footer { text-align:center; margin-bottom:10px;}
-  .bill-logo { width:80px; height:80px; background:#ccc; display:inline-block; border-radius:50%; margin-bottom:5px; }
+  body { 
+  font-family: Arial, sans-serif; 
+  margin: 20px; 
+  background: #f4f4f9; 
+}
+
+h1 { 
+  text-align: center; 
+  color: #333; 
+}
+
+.container { 
+  display: flex; 
+  gap: 30px; 
+  flex-wrap: wrap; 
+  align-items: flex-start; /* ensures bill box doesn't stretch */
+}
+
+/* Products box */
+.items { 
+  flex: 1; 
+  min-width: 300px; 
+  max-height: 500px; /* scroll if too many products */
+  overflow-y: auto; 
+  background: white; 
+  padding: 15px; 
+  border-radius: 10px; 
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.2); 
+}
+
+/* Bill box */
+.bill { 
+  flex: 1; 
+  min-width: 300px; 
+  background: white; 
+  padding: 15px; 
+  border-radius: 10px; 
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.2); 
+  align-self: flex-start; /* independent height */
+  max-height: 700px; /* optional, scroll inside if needed */
+  overflow-y: auto;
+}
+
+.items h2, .bill h2 { 
+  margin-bottom: 10px; 
+  border-bottom: 2px solid #ddd; 
+  padding-bottom: 5px; 
+}
+
+.item { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 5px 0; 
+}
+
+.bill table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 10px; 
+}
+
+.bill table th, .bill table td { 
+  border: 1px solid #ccc; 
+  padding: 8px; 
+  text-align: center; 
+}
+
+.bill input[type="number"] { 
+  width: 60px; 
+}
+
+.qty-buttons { 
+  display: flex; 
+  gap: 5px; 
+  justify-content: center; 
+  align-items: center; 
+}
+
+.qty-buttons button { 
+  padding: 2px 8px; 
+  cursor: pointer; 
+}
+
+.total { 
+  text-align: right; 
+  margin-top: 15px; 
+  font-size: 18px; 
+  font-weight: bold; 
+}
+
+.download-btn { 
+  margin-top: 10px; 
+  padding: 10px 15px; 
+  background: #333; 
+  color: white; 
+  border: none; 
+  border-radius: 5px; 
+  cursor: pointer; 
+}
+
+.download-btn:hover { 
+  background: #555; 
+}
+
+.status-container, .operator-container, .customer-container { 
+  margin-top: 10px; 
+}
+
+.bill-header, .bill-footer { 
+  text-align: center; 
+  margin-bottom: 10px; 
+}
+
+.bill-logo { 
+  width: 80px; 
+  height: 80px; 
+  background: #ccc; 
+  display: inline-block; 
+  border-radius: 50%; 
+  margin-bottom: 5px; 
+}
+
+/* Responsive adjustments */
+@media (max-width: 700px) {
+  .container { 
+    flex-direction: column; 
+  }
+  .items, .bill { 
+    max-height: none; 
+  }
+}
 </style>
 </head>
 <body>
