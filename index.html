@@ -356,7 +356,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
 document.addEventListener("DOMContentLoaded", () => {
   const checkboxes = document.querySelectorAll('.items input[type="checkbox"]');
   const billTableBody = document.querySelector('#billTable tbody');
@@ -439,7 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${strHours}:${strMinutes} ${ampm}`;
   }
 
-  // Helper to apply any pending price changes before download
+  // Apply any pending price changes
   function applyPendingPrices() {
     document.querySelectorAll('.price').forEach(input => {
       const name = input.dataset.name;
@@ -447,85 +448,87 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Download bill (only selected items)
   downloadBtn.addEventListener('click', () => {
-  applyPendingPrices();
-  
-  // Create a temporary clone for download
-  const tempBill = document.createElement('div');
-  tempBill.style.padding = '15px';
-  tempBill.style.background = 'white';
-  tempBill.style.borderRadius = '10px';
-  tempBill.style.width = 'fit-content';
-  tempBill.style.fontFamily = 'Arial, sans-serif';
-  
-  // Copy bill header
-  const header = billDiv.querySelector('.bill-header').cloneNode(true);
-  tempBill.appendChild(header);
-  
-  // Customer / Operator / Status
-  const info = document.createElement('div');
-  info.style.margin = '10px 0';
-  info.innerHTML = `Customer: ${customerNameInput.value || '-'}<br>
-                    Operator: ${billOperator.value}<br>
-                    Status: ${billStatus.value}<br>
-                    Date: ${new Date().toLocaleDateString()}<br>
-                    Time: ${formatTime12(new Date())}`;
-  tempBill.appendChild(info);
-  
-  // Bill Table with only selected items
-  const table = document.createElement('table');
-  table.style.borderCollapse = 'collapse';
-  table.style.width = '100%';
-  table.innerHTML = `<thead>
-    <tr>
-      <th style="border:1px solid #ccc;padding:8px;">Item</th>
-      <th style="border:1px solid #ccc;padding:8px;">Rate</th>
-      <th style="border:1px solid #ccc;padding:8px;">Qty</th>
-      <th style="border:1px solid #ccc;padding:8px;">Amount</th>
-    </tr>
-  </thead>`;
-  
-  const tbody = document.createElement('tbody');
-  let total = 0;
-  for (let name in billItems) {
-    const item = billItems[name];
-    if(item.qty > 0 || item.price > 0){ // only include items that have quantity or price
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td style="border:1px solid #ccc;padding:8px;">${name}</td>
-        <td style="border:1px solid #ccc;padding:8px;">₹${item.price}</td>
-        <td style="border:1px solid #ccc;padding:8px;">${item.qty}</td>
-        <td style="border:1px solid #ccc;padding:8px;">₹${item.price * item.qty}</td>
-      `;
-      tbody.appendChild(row);
-      total += item.price * item.qty;
-    }
-  }
-  table.appendChild(tbody);
-  tempBill.appendChild(table);
-  
-  // Total
-  const totalDiv = document.createElement('div');
-  totalDiv.style.textAlign = 'right';
-  totalDiv.style.marginTop = '10px';
-  totalDiv.style.fontWeight = 'bold';
-  totalDiv.textContent = `Total: ₹${total}`;
-  tempBill.appendChild(totalDiv);
-  
-  // Footer
-  const footer = billDiv.querySelector('.bill-footer').cloneNode(true);
-  footer.style.marginTop = '10px';
-  tempBill.appendChild(footer);
+    applyPendingPrices();
+    updateBill(); // Refresh amounts
 
-  // Generate image
-  html2canvas(tempBill, {scale:2}).then(canvas => {
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = 'bill.png';
-    link.click();
+    // Create temporary clone for download
+    const tempBill = document.createElement('div');
+    tempBill.style.padding = '15px';
+    tempBill.style.background = 'white';
+    tempBill.style.borderRadius = '10px';
+    tempBill.style.width = 'fit-content';
+    tempBill.style.fontFamily = 'Arial, sans-serif';
+    
+    // Copy header
+    const header = billDiv.querySelector('.bill-header').cloneNode(true);
+    tempBill.appendChild(header);
+    
+    // Customer / Operator / Status
+    const info = document.createElement('div');
+    info.style.margin = '10px 0';
+    info.innerHTML = `Customer: ${customerNameInput.value || '-'}<br>
+                      Operator: ${billOperator.value}<br>
+                      Status: ${billStatus.value}<br>
+                      Date: ${new Date().toLocaleDateString()}<br>
+                      Time: ${formatTime12(new Date())}`;
+    tempBill.appendChild(info);
+    
+    // Bill table
+    const table = document.createElement('table');
+    table.style.borderCollapse = 'collapse';
+    table.style.width = '100%';
+    table.innerHTML = `<thead>
+      <tr>
+        <th style="border:1px solid #ccc;padding:8px;">Item</th>
+        <th style="border:1px solid #ccc;padding:8px;">Rate</th>
+        <th style="border:1px solid #ccc;padding:8px;">Qty</th>
+        <th style="border:1px solid #ccc;padding:8px;">Amount</th>
+      </tr>
+    </thead>`;
+    
+    const tbody = document.createElement('tbody');
+    let total = 0;
+    for (let name in billItems) {
+      const item = billItems[name];
+      if(item.qty > 0 || item.price > 0){
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td style="border:1px solid #ccc;padding:8px;">${name}</td>
+          <td style="border:1px solid #ccc;padding:8px;">₹${item.price}</td>
+          <td style="border:1px solid #ccc;padding:8px;">${item.qty}</td>
+          <td style="border:1px solid #ccc;padding:8px;">₹${item.price * item.qty}</td>
+        `;
+        tbody.appendChild(row);
+        total += item.price * item.qty;
+      }
+    }
+    table.appendChild(tbody);
+    tempBill.appendChild(table);
+    
+    // Total
+    const totalDiv = document.createElement('div');
+    totalDiv.style.textAlign = 'right';
+    totalDiv.style.marginTop = '10px';
+    totalDiv.style.fontWeight = 'bold';
+    totalDiv.textContent = `Total: ₹${total}`;
+    tempBill.appendChild(totalDiv);
+    
+    // Footer
+    const footer = billDiv.querySelector('.bill-footer').cloneNode(true);
+    footer.style.marginTop = '10px';
+    tempBill.appendChild(footer);
+
+    // Generate image
+    html2canvas(tempBill, {scale:2}).then(canvas => {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = 'bill.png';
+      link.click();
+    });
   });
 });
-});
-  </script>
+</script> 
 </body>
 </html>
