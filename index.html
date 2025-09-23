@@ -356,7 +356,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script>
+  <script>
 document.addEventListener("DOMContentLoaded", () => {
   const checkboxes = document.querySelectorAll('.items input[type="checkbox"]');
   const billTableBody = document.querySelector('#billTable tbody');
@@ -393,15 +393,16 @@ document.addEventListener("DOMContentLoaded", () => {
     totalAmountEl.textContent = total;
   }
 
-  // Event delegation for price input and quantity buttons
-  billTableBody.addEventListener('input', e => {
-    if(e.target.classList.contains('price')){
+  // Update price only on Enter key
+  billTableBody.addEventListener('keydown', e => {
+    if(e.target.classList.contains('price') && e.key === 'Enter'){
       const name = e.target.dataset.name;
       billItems[name].price = parseInt(e.target.value) || 0;
       updateBill();
     }
   });
 
+  // Quantity buttons
   billTableBody.addEventListener('click', e => {
     const name = e.target.dataset.name;
     if(e.target.classList.contains('plus')){
@@ -413,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Checkbox selection
   checkboxes.forEach(cb => {
     cb.addEventListener('change', () => {
       const name = cb.dataset.name;
@@ -437,7 +439,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${strHours}:${strMinutes} ${ampm}`;
   }
 
+  // Helper to apply any pending price changes before download
+  function applyPendingPrices() {
+    document.querySelectorAll('.price').forEach(input => {
+      const name = input.dataset.name;
+      billItems[name].price = parseInt(input.value) || 0;
+    });
+  }
+
+  // Download bill
   downloadBtn.addEventListener('click', () => {
+    applyPendingPrices();
+    updateBill(); // Refresh amounts
+
     const now = new Date();
     const dateStr = now.toLocaleDateString();
     const timeStr = formatTime12(now);
@@ -458,6 +472,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
-</script>
+  </script>
 </body>
 </html>
