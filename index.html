@@ -6,8 +6,8 @@
 <style>
   body { font-family: Arial; margin:20px; background:#f4f4f9;}
   h1 { text-align:center; color:#333;}
-  .container { display:flex; gap:30px;}
-  .items, .bill { flex:1; background:white; padding:15px; border-radius:10px; box-shadow:0px 2px 6px rgba(0,0,0,0.2);}
+  .container { display:flex; gap:30px; flex-wrap:wrap;}
+  .items, .bill { flex:1; min-width:300px; background:white; padding:15px; border-radius:10px; box-shadow:0px 2px 6px rgba(0,0,0,0.2);}
   .items h2, .bill h2 { margin-bottom:10px; border-bottom:2px solid #ddd; padding-bottom:5px;}
   .item { display:flex; justify-content:space-between; align-items:center; padding:5px 0;}
   .bill table { width:100%; border-collapse:collapse; margin-top:10px;}
@@ -18,7 +18,9 @@
   .total { text-align:right; margin-top:15px; font-size:18px; font-weight:bold;}
   .download-btn { margin-top:10px; padding:10px 15px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer;}
   .download-btn:hover { background:#555;}
-  .status-container, .operator-container { margin-top:10px; }
+  .status-container, .operator-container, .customer-container { margin-top:10px; }
+  .bill-header, .bill-footer { text-align:center; margin-bottom:10px;}
+  .bill-logo { width:80px; height:80px; background:#ccc; display:inline-block; border-radius:50%; margin-bottom:5px; }
 </style>
 </head>
 <body>
@@ -34,7 +36,18 @@
   </div>
 
   <div class="bill" id="billDiv">
+    <div class="bill-header">
+      <div class="bill-logo"><img src="https://i.postimg.cc/kg9hZ4nz/1000016693-1-optimized.png"></div>
+      <div><strong>Electric point Billing</strong></div>
+      <div>Contact: +91 1234567890 | info@flovvnetic.com</div>
+    </div>
+
     <h2>Bill</h2>
+
+    <div class="customer-container">
+      <label>Customer Name: <input type="text" id="customerName" placeholder="Enter name"></label>
+    </div>
+
     <div class="operator-container">
       <label>Operator:
         <select id="billOperator">
@@ -43,6 +56,7 @@
         </select>
       </label>
     </div>
+
     <div class="status-container">
       <label>Status: 
         <select id="billStatus">
@@ -51,14 +65,21 @@
         </select>
       </label>
     </div>
+
     <table id="billTable">
       <thead>
         <tr><th>Item</th><th>Rate</th><th>Qty</th><th>Amount</th></tr>
       </thead>
       <tbody></tbody>
     </table>
+
     <div class="total">Total: ₹<span id="totalAmount">0</span></div>
+
     <button class="download-btn" id="downloadBtn">Download Bill</button>
+
+    <div class="bill-footer">
+      Thank you for your purchase!
+    </div>
   </div>
 </div>
 
@@ -72,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const billDiv = document.getElementById('billDiv');
   const billStatus = document.getElementById('billStatus');
   const billOperator = document.getElementById('billOperator');
+  const customerNameInput = document.getElementById('customerName');
 
   let billItems = {};
 
@@ -83,32 +105,41 @@ document.addEventListener("DOMContentLoaded", () => {
       let row = document.createElement('tr');
       row.innerHTML = `
         <td>${name}</td>
-        <td><input type="number" min="0" value="${item.price}" class="price"></td>
+        <td><input type="number" min="0" value="${item.price}" class="price" data-name="${name}"></td>
         <td class="qty-cell">
           <div class="qty-buttons">
-            <button class="minus">-</button>
+            <button class="minus" data-name="${name}">-</button>
             <span class="qty">${item.qty}</span>
-            <button class="plus">+</button>
+            <button class="plus" data-name="${name}">+</button>
           </div>
         </td>
         <td class="amount">₹${item.price*item.qty}</td>
       `;
       billTableBody.appendChild(row);
-
-      // Price change
-      row.querySelector('.price').addEventListener('input', e => {
-        billItems[name].price = parseInt(e.target.value) || 0;
-        updateBill();
-      });
-
-      // Quantity buttons
-      row.querySelector('.plus').addEventListener('click', () => { billItems[name].qty++; updateBill(); });
-      row.querySelector('.minus').addEventListener('click', () => { if(billItems[name].qty>0) billItems[name].qty--; updateBill(); });
-
       total += item.price * item.qty;
     }
     totalAmountEl.textContent = total;
   }
+
+  // Event delegation for price input and quantity buttons
+  billTableBody.addEventListener('input', e => {
+    if(e.target.classList.contains('price')){
+      const name = e.target.dataset.name;
+      billItems[name].price = parseInt(e.target.value) || 0;
+      updateBill();
+    }
+  });
+
+  billTableBody.addEventListener('click', e => {
+    const name = e.target.dataset.name;
+    if(e.target.classList.contains('plus')){
+      billItems[name].qty++;
+      updateBill();
+    } else if(e.target.classList.contains('minus')){
+      if(billItems[name].qty > 0) billItems[name].qty--;
+      updateBill();
+    }
+  });
 
   checkboxes.forEach(cb => {
     cb.addEventListener('change', () => {
@@ -128,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let minutes = date.getMinutes();
     let ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // 0 -> 12
+    hours = hours ? hours : 12;
     let strHours = hours < 10 ? '0'+hours : hours;
     let strMinutes = minutes < 10 ? '0'+minutes : minutes;
     return `${strHours}:${strMinutes} ${ampm}`;
@@ -139,12 +170,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const dateStr = now.toLocaleDateString();
     const timeStr = formatTime12(now);
 
-    // Add operator, date/time, and status temporarily
     let infoDiv = document.createElement('div');
     infoDiv.style.textAlign = 'right';
     infoDiv.style.marginTop = '10px';
     infoDiv.id = 'billInfo';
-    infoDiv.innerHTML = `Operator: ${billOperator.value} | Date: ${dateStr} | Time: ${timeStr} | Status: ${billStatus.value}`;
+    infoDiv.innerHTML = `Customer: ${customerNameInput.value || '-'} | Operator: ${billOperator.value} | Date: ${dateStr} | Time: ${timeStr} | Status: ${billStatus.value}`;
     billDiv.appendChild(infoDiv);
 
     html2canvas(billDiv, {scale:2}).then(canvas => {
@@ -152,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       link.href = canvas.toDataURL('image/png');
       link.download = 'bill.png';
       link.click();
-      infoDiv.remove(); // remove temporary info
+      infoDiv.remove();
     });
   });
 });
